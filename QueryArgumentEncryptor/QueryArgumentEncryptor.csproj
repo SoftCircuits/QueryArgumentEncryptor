@@ -18,6 +18,7 @@ QueryArgumentEncryptor solves both issues by converting any number of key/value 
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>query encryption argument url</PackageTags>
+    <PackageId>SoftCircuits.QueryArgumentEncryptor</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

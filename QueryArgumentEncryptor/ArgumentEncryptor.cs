@@ -81,31 +81,40 @@ namespace QueryArgumentEncryptor
         /// the setting passed to <see cref="EncryptData"/>.</param>
         public void DecryptData(string encryptedData, bool urlDecode = true)
         {
-            // Descrypt string
-            if (urlDecode)
-                encryptedData = WebUtility.UrlDecode(encryptedData);
-            string data = Decrypt(encryptedData);
-            // Parse out key/value pairs and add to dictionary
-            Clear();
-            string checksum = null;
-            string[] keyValues = data.Split(ItemDelimiter);
-            foreach (string keyValue in keyValues)
+            try
             {
-                int i = keyValue.IndexOf(KeyValueDelimiter);
-                if (i != -1)
-                {
-                    string key = keyValue.Substring(0, i);
-                    string value = keyValue.Substring(i + 1);
-                    if (key == ChecksumKey)
-                        checksum = value;
-                    else
-                        Add(key, value);
-                }
-                else Add(keyValue, string.Empty);
-            }
-            // Clear contents if valid checksum not found
-            if (checksum == null || checksum != ComputeChecksum())
+                // Descrypt string
+                if (urlDecode)
+                    encryptedData = WebUtility.UrlDecode(encryptedData);
+                string data = Decrypt(encryptedData);
+                // Parse out key/value pairs and add to dictionary
                 Clear();
+                string checksum = null;
+                string[] keyValues = data.Split(ItemDelimiter);
+                foreach (string keyValue in keyValues)
+                {
+                    int i = keyValue.IndexOf(KeyValueDelimiter);
+                    if (i != -1)
+                    {
+                        string key = keyValue.Substring(0, i);
+                        string value = keyValue.Substring(i + 1);
+                        if (key == ChecksumKey)
+                            checksum = value;
+                        else
+                            Add(key, value);
+                    }
+                    else Add(keyValue, string.Empty);
+                }
+                // Clear contents if valid checksum not found
+                if (checksum == null || checksum != ComputeChecksum())
+                    Clear();
+            }
+            catch (Exception)
+            {
+                // Clear all data if exception
+                Clear();
+                throw;
+            }
         }
 
         /// <summary>
