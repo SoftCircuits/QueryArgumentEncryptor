@@ -144,8 +144,8 @@ namespace QueryArgumentEncryptor
                     rngProvider.GetBytes(tripleDES.IV);
                 }
 
-                var x = new Rfc2898DeriveBytes(Password, tripleDES.IV);
-                tripleDES.Key = x.GetBytes(16);
+                Rfc2898DeriveBytes keyBytes = new Rfc2898DeriveBytes(Password, tripleDES.IV);
+                tripleDES.Key = keyBytes.GetBytes(16);
 
                 using (MemoryStream memStream = new MemoryStream())
                 {
@@ -177,8 +177,8 @@ namespace QueryArgumentEncryptor
                     tripleDES.IV = new byte[8];
                     Array.Copy(data, tripleDES.IV, tripleDES.IV.Length);
 
-                    var x = new Rfc2898DeriveBytes(Password, tripleDES.IV);
-                    tripleDES.Key = x.GetBytes(16);
+                    Rfc2898DeriveBytes keyBytes = new Rfc2898DeriveBytes(Password, tripleDES.IV);
+                    tripleDES.Key = keyBytes.GetBytes(16);
 
                     using (MemoryStream memStream = new MemoryStream())
                     {
