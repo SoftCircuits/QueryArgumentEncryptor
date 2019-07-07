@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
     <Copyright>Copyright © 2019 SoftCircuits</Copyright>
     <Authors>Jonathan Wood</Authors>
     <Company>SoftCircuits</Company>
@@ -19,10 +19,12 @@ QueryArgumentEncryptor solves both issues by converting any number of key/value 
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>query encryption argument url</PackageTags>
     <PackageId>SoftCircuits.QueryArgumentEncryptor</PackageId>
+    <Version>1.0.1</Version>
+    <PackageReleaseNotes>Renamed namespace from QueryArgumentEncryptor to SoftCircuits.QueryArgumentEncryptor.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\FullTextSearchQuery\LICENSE">
+    <None Include="..\License.txt">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using QueryArgumentEncryptor;
+using SoftCircuits.QueryArgumentEncryptor;
 using System;
 
 namespace TestQueryArgumentEncryptor

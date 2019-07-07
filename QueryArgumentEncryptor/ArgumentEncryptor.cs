@@ -8,7 +8,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace QueryArgumentEncryptor
+namespace SoftCircuits.QueryArgumentEncryptor
 {
     public class ArgumentEncryptor : Dictionary<string, string>
     {
