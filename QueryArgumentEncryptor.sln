@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29020.237
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryArgumentEncryptor", "QueryArgumentEncryptor\QueryArgumentEncryptor.csproj", "{9ECCFE93-2630-4056-9C5A-C14DCDEAFDAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QueryArgumentEncryptor", "QueryArgumentEncryptor\QueryArgumentEncryptor.csproj", "{9ECCFE93-2630-4056-9C5A-C14DCDEAFDAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestQueryArgumentEncryptor", "TestQueryArgumentEncryptor\TestQueryArgumentEncryptor.csproj", "{51698B2E-2F9D-4C86-B8F0-E1DDB223AC58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryArgumentEncryptor.Tests", "QueryArgumentEncryptor.Tests\QueryArgumentEncryptor.Tests.csproj", "{51698B2E-2F9D-4C86-B8F0-E1DDB223AC58}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

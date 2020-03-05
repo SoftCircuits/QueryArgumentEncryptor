@@ -5,26 +5,28 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-    <Copyright>Copyright © 2019 SoftCircuits</Copyright>
+    <Copyright>Copyright © 2019-2020 SoftCircuits</Copyright>
     <Authors>Jonathan Wood</Authors>
     <Company>SoftCircuits</Company>
-    <Description>QueryArgumentEncryptor makes it easy to pass private data as a URL query argument.
-
-When passing data as a query argument in a URL, sometimes that data contains sensitive information that you do not want to expose to the user. In addition, sometimes it is important to ensure that data is not tampered with. For example, if a query argument contained an ID associated with the current user, someone could edit the ID and potentially expose information for another user.
-
-QueryArgumentEncryptor solves both issues by converting any number of key/value pairs into a single, encrypted string. The class also computes a checksum on the data. When decrypting the string, all the data is rejected if the checksum does not match.</Description>
+    <Description>.NET library that can transform any number of name/value pairs into an encrypted string and then back again. Allows you to pass secret data via URL query arguments. Data includes checksum so that it can't be tampered with. Can be used anywhere you need a Dictionary&lt;string, string&gt; that can encrypt to a string and back again.</Description>
     <PackageProjectUrl>https://github.com/SoftCircuits/QueryArgumentEncryptor</PackageProjectUrl>
     <RepositoryUrl>https://github.com/SoftCircuits/QueryArgumentEncryptor</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <PackageTags>query encryption argument url</PackageTags>
+    <PackageTags>encode query encrypt arguments url encrypt-query encrypt-query-arguments</PackageTags>
     <PackageId>SoftCircuits.QueryArgumentEncryptor</PackageId>
-    <Version>1.0.1</Version>
-    <PackageReleaseNotes>Renamed namespace from QueryArgumentEncryptor to SoftCircuits.QueryArgumentEncryptor.</PackageReleaseNotes>
+    <Version>1.0.2</Version>
+    <PackageReleaseNotes>Completely reworked code; Expanded unit tests; Added package icon.</PackageReleaseNotes>
+    <PackageIcon>Logo_64x64.png</PackageIcon>
+    <PackageIconUrl />
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\License.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\Logo_64x64.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

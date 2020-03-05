@@ -1,31 +1,26 @@
-﻿// Copyright (c) 2019 Jonathan Wood (www.softcircuits.com)
+﻿// Copyright (c) 2019-2020 Jonathan Wood (www.softcircuits.com)
 // Licensed under the MIT license.
 //
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace SoftCircuits.QueryArgumentEncryptor
 {
     public class ArgumentEncryptor : Dictionary<string, string>
     {
-        public string Password { get; set; }
+        private const int ChecksumLength = sizeof(Int16);
+        private const int SaltLength = 8;
+        private const int SecretKeyLength = 16;
+        private const int HeaderLength = (ChecksumLength + SaltLength);
 
-        // Note: The following items must be values that are unlikely to
-        // appear within the user's data
-
-        // Item delimiter
-        protected const char ItemDelimiter = '\u0000';
-        // Key/value delimiter
-        protected const char KeyValueDelimiter = '\u0001';
-        // Key for checksum value
-        protected const string ChecksumKey = "$\u0002$";
+        private string Password { get; set; }
 
         /// <summary>
-        /// Creates an empty dictionary
+        /// Constructs an empty <see cref="ArgumentEncryptor"></see> instance.
         /// </summary>
         /// <param name="password">Password used to encrypt/decrypt data.</param>
         public ArgumentEncryptor(string password)
@@ -34,7 +29,8 @@ namespace SoftCircuits.QueryArgumentEncryptor
         }
 
         /// <summary>
-        /// Creates a dictionary and populates it from the given encrypted string.
+        /// Creates an <see cref="ArgumentEncryptor"></see> instance and populates
+        /// it from the given <paramref name="encryptedData"></paramref> string.
         /// </summary>
         /// <param name="password">Password used to encrypt/decrypt data.</param>
         /// <param name="encryptedData">Data encrypted with <see cref="EncryptData"></see>.</param>
@@ -55,27 +51,22 @@ namespace SoftCircuits.QueryArgumentEncryptor
         /// <returns>The encrypted string.</returns>
         public string EncryptData(bool urlEncode = true)
         {
-            // Build query string from current contents
-            StringBuilder content = new StringBuilder();
-            foreach (string key in base.Keys)
-            {
-                if (content.Length > 0)
-                    content.Append(ItemDelimiter);
-                content.AppendFormat("{0}{1}{2}", key, KeyValueDelimiter, this[key]);
-            }
-            // Add checksum
-            if (content.Length > 0)
-                content.Append(ItemDelimiter);
-            content.AppendFormat("{0}{1}{2}", ChecksumKey, KeyValueDelimiter, ComputeChecksum());
-            // Encrypt resulting string
-            string result = Encrypt(content.ToString());
-            return (urlEncode) ? WebUtility.UrlEncode(result) : result;
+            // Encrypt data to string
+            string encryptedData = EncryptToString();
+            // URL encode, if requested
+            if (urlEncode)
+                encryptedData = WebUtility.UrlEncode(encryptedData);
+            // Return result
+            return encryptedData;
         }
 
         /// <summary>
-        /// Builds the current collection from an encrypted string.
+        /// Constructs name/value data from an encrypted string created with
+        /// <see cref="EncryptData(bool)"></see>. Replaces any data already in
+        /// this collection.
         /// </summary>
-        /// <param name="encryptedData">The encrypted string.</param>
+        /// <param name="encryptedData">The encrypted string previously encrypted with
+        /// <see cref="EncryptData(bool)"></see>.</param>
         /// <param name="urlDecode">If true, <paramref name="encryptedData"/> is
         /// URL decoded before being decrypted. In general, this must match
         /// the setting passed to <see cref="EncryptData"/>.</param>
@@ -83,127 +74,147 @@ namespace SoftCircuits.QueryArgumentEncryptor
         {
             try
             {
-                // Descrypt string
+                // URL decode, if requested
                 if (urlDecode)
                     encryptedData = WebUtility.UrlDecode(encryptedData);
-                string data = Decrypt(encryptedData);
-                // Parse out key/value pairs and add to dictionary
-                Clear();
-                string checksum = null;
-                string[] keyValues = data.Split(ItemDelimiter);
-                foreach (string keyValue in keyValues)
-                {
-                    int i = keyValue.IndexOf(KeyValueDelimiter);
-                    if (i != -1)
-                    {
-                        string key = keyValue.Substring(0, i);
-                        string value = keyValue.Substring(i + 1);
-                        if (key == ChecksumKey)
-                            checksum = value;
-                        else
-                            Add(key, value);
-                    }
-                    else Add(keyValue, string.Empty);
-                }
-                // Clear contents if valid checksum not found
-                if (checksum == null || checksum != ComputeChecksum())
-                    Clear();
+                // Decrypt string
+                DecryptFromString(encryptedData);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Clear all data if exception
+                // Clear all data on exception
                 Clear();
-                throw;
+                throw new Exception("Invalid data or password", ex);
             }
         }
 
         /// <summary>
-        /// Returns a simple checksum for all keys and values in the collection
+        /// Encrypts the current dictionary to a string.
         /// </summary>
-        /// <returns></returns>
-        protected string ComputeChecksum()
-        {
-            int checksum = 0;
-
-            unchecked
-            {
-                foreach (KeyValuePair<string, string> pair in this)
-                {
-                    checksum += 17;
-                    checksum += pair.Key.GetHashCode();
-                    checksum += 17;
-                    checksum += pair.Value.GetHashCode();
-                }
-            }
-            return checksum.ToString("X");
-        }
-
-        internal string Encrypt(string text)
+        /// <returns>Returns the encrypted string.</returns>
+        internal string EncryptToString()
         {
             if (string.IsNullOrWhiteSpace(Password))
-                throw new Exception("No password specified");
-
-            byte[] data = Encoding.UTF8.GetBytes(text);
+                throw new Exception("A password is required.");
 
             using (TripleDES tripleDES = TripleDES.Create())
             {
-                tripleDES.IV = new byte[8];
-                using (RNGCryptoServiceProvider rngProvider = new RNGCryptoServiceProvider())
-                {
-                    rngProvider.GetBytes(tripleDES.IV);
-                }
-
+                Debug.Assert(tripleDES.IV.Length == SaltLength);
+                // Generate key from password
                 Rfc2898DeriveBytes keyBytes = new Rfc2898DeriveBytes(Password, tripleDES.IV);
-                tripleDES.Key = keyBytes.GetBytes(16);
+                tripleDES.Key = keyBytes.GetBytes(SecretKeyLength);
 
                 using (MemoryStream memStream = new MemoryStream())
                 {
+                    // Write placeholder for checksum
+                    memStream.Write(BitConverter.GetBytes((Int16)0), 0, ChecksumLength);
                     // Save salt with encrypted data
                     memStream.Write(tripleDES.IV, 0, tripleDES.IV.Length);
-
-                    using (CryptoStream encryptor = new CryptoStream(memStream, tripleDES.CreateEncryptor(), CryptoStreamMode.Write))
+                    // Read data
+                    using (CryptoStream cryptoStream = new CryptoStream(memStream, tripleDES.CreateEncryptor(), CryptoStreamMode.Write))
+                    using (BinaryWriter writer = new BinaryWriter(cryptoStream))
                     {
-                        encryptor.Write(data, 0, data.Length);
-                        encryptor.FlushFinalBlock();
-                        encryptor.Close();
+                        // Write number of items
+                        writer.Write(Count);
+                        // Write items
+                        foreach (KeyValuePair<string, string> item in this)
+                        {
+                            writer.Write(item.Key);
+                            writer.Write(item.Value);
+                        }
                     }
-                    return Convert.ToBase64String(memStream.ToArray());
+                    // Get data bytes
+                    byte[] data = memStream.ToArray();
+                    // Write actual checksum
+                    int checksum = CalculateChecksum(data, ChecksumLength, data.Length - ChecksumLength);
+                    Array.Copy(BitConverter.GetBytes(checksum), 0, data, 0, ChecksumLength);
+                    // Return base64 string
+                    return Convert.ToBase64String(data);
                 }
             }
         }
 
-        internal string Decrypt(string cipherString)
+        /// <summary>
+        /// Populates this dictionary from a given cipher string created by
+        /// <see cref="EncryptToString"></see>.
+        /// </summary>
+        /// <param name="encryptedData">String previously created by
+        /// <see cref="EncryptToString"></see>.</param>
+        internal void DecryptFromString(string encryptedData)
         {
+            // Clear any existing items
+            Clear();
+
             if (string.IsNullOrWhiteSpace(Password))
-                throw new Exception("No password specified");
+                throw new Exception("A password is required.");
 
-            try
+            // Get data bytes
+            byte[] data = Convert.FromBase64String(encryptedData);
+
+            // Confirm checksum
+            Int16 checksum = BitConverter.ToInt16(data, 0);
+            if (checksum != CalculateChecksum(data, ChecksumLength, data.Length - ChecksumLength))
+                throw new Exception("Encrypted data has bad checksum.");
+
+            using (TripleDES tripleDES = TripleDES.Create())
             {
-                byte[] data = Convert.FromBase64String(cipherString);
+                // Retrieve salt from data
+                tripleDES.IV = new byte[SaltLength];
+                byte[] iv = tripleDES.IV;
+                Array.Copy(data, ChecksumLength, iv, 0, iv.Length);
+                tripleDES.IV = iv;
 
-                using (TripleDES tripleDES = TripleDES.Create())
+                // Derive key from password
+                Rfc2898DeriveBytes keyBytes = new Rfc2898DeriveBytes(Password, tripleDES.IV);
+                tripleDES.Key = keyBytes.GetBytes(SecretKeyLength);
+
+                using (MemoryStream memStream = new MemoryStream())
                 {
-                    tripleDES.IV = new byte[8];
-                    Array.Copy(data, tripleDES.IV, tripleDES.IV.Length);
-
-                    Rfc2898DeriveBytes keyBytes = new Rfc2898DeriveBytes(Password, tripleDES.IV);
-                    tripleDES.Key = keyBytes.GetBytes(16);
-
-                    using (MemoryStream memStream = new MemoryStream())
+                    // TODO: When upgrading to .NET Core, modify the following to use the second CryptoStream
+                    // constructor, which includes a leaveOpen parameter, and make the using block tighter.
+                    // This parameter was not available with .NET Standard 2.0.
+                    using (CryptoStream cryptoStream = new CryptoStream(memStream, tripleDES.CreateDecryptor(), CryptoStreamMode.Write))
                     {
-                        using (CryptoStream decryptor = new CryptoStream(memStream, tripleDES.CreateDecryptor(), CryptoStreamMode.Write))
+                        // Write data to decryptor
+                        cryptoStream.Write(data, HeaderLength, data.Length - HeaderLength);
+                        cryptoStream.FlushFinalBlock();
+                        // Reset stream and read unencrypted data
+                        memStream.Seek(0, SeekOrigin.Begin);
+                        using (BinaryReader reader = new BinaryReader(memStream))
                         {
-                            decryptor.Write(data, 8, data.Length - 8);
-                            decryptor.Flush();
-                            decryptor.Close();
+                            // Read number of items
+                            int count = reader.ReadInt32();
+                            // Read items
+                            for (int i = 0; i < count; i++)
+                            {
+                                string key = reader.ReadString();
+                                string value = reader.ReadString();
+                                Add(key, value);
+                            }
                         }
-                        return Encoding.UTF8.GetString(memStream.ToArray());
                     }
                 }
             }
-            catch (Exception ex)
+        }
+
+        /// <summary>
+        /// Calculates a checksum on an array of bytes.
+        /// </summary>
+        /// <param name="data">An array of bytes on which to calculate a checksum.</param>
+        /// <param name="start">Starting index of array elements to include in the checksum.</param>
+        /// <param name="length">The number of bytes to include in the checksum.</param>
+        /// <returns>The calculated checksum.</returns>
+        private Int16 CalculateChecksum(byte[] data, int start, int length)
+        {
+            Debug.Assert(data != null);
+            Debug.Assert(start + length <= data.Length);
+
+            unchecked
             {
-                throw new Exception("Invalid password or data", ex);
+                int checksum = 1055843540;
+                for (int i = 0; i < length; i++)
+                    checksum = checksum * -1521134295 + data[start + i];
+                return (Int16)checksum;
             }
         }
     }
