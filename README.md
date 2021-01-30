@@ -10,7 +10,7 @@ Install-Package SoftCircuits.QueryArgumentEncryptor
 
 When passing data as a query argument in a URL, sometimes that data contains sensitive information that you do not want to expose to the user. In addition, sometimes it is important to ensure that data is not tampered with. For example, if a query argument contained an ID associated with the current user, someone could edit the ID and potentially expose information for another user.
 
-`QueryArgumentEncryptor` solves both issues by converting any number of key/value pairs into a single, encrypted string. The class also computes a checksum on the data. When decrypting the string, all the data is rejected if the checksum does not match.
+`QueryArgumentEncryptor` solves both issues by converting any number of key/value pairs into a single, encrypted string. The class also computes a checksum on the data. When decrypting the string, all the data is rejected if the checksums do not match.
 
 ## Using the Class
 
@@ -34,7 +34,6 @@ The page receiving this URL request can then reconstitute the original data from
 string arg = /* Value of query argument */
 
 // Note: An exception is thrown if the password or data is invalid.
-// If the data is valid but incorrect, args will be empty.
 ArgumentEncryptor args = new ArgumentEncryptor("Password123", arg);
 // Get some data
 string s = args["Key1"];
