@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2020 Jonathan Wood (www.softcircuits.com)
+﻿// Copyright (c) 2019-2021 Jonathan Wood (www.softcircuits.com)
 // Licensed under the MIT license.
 //
 using System;
@@ -22,7 +22,7 @@ namespace SoftCircuits.QueryArgumentEncryptor
         /// <summary>
         /// Constructs an empty <see cref="ArgumentEncryptor"></see> instance.
         /// </summary>
-        /// <param name="password">Password used to encrypt/decrypt data.</param>
+        /// <param name="password">Password used to encrypt/decrypt the data.</param>
         public ArgumentEncryptor(string password)
         {
             Password = password ?? throw new ArgumentNullException(nameof(password));
@@ -32,11 +32,11 @@ namespace SoftCircuits.QueryArgumentEncryptor
         /// Creates an <see cref="ArgumentEncryptor"></see> instance and populates
         /// it from the given <paramref name="encryptedData"></paramref> string.
         /// </summary>
-        /// <param name="password">Password used to encrypt/decrypt data.</param>
+        /// <param name="password">Password used to encrypt/decrypt the data.</param>
         /// <param name="encryptedData">Data encrypted with <see cref="EncryptData"></see>.</param>
         /// <param name="urlDecode">If true, <paramref name="encryptedData"/> is
-        /// URL decoded before being decrypted. In general, this must match
-        /// the setting passed to <see cref="EncryptData"/>.</param>
+        /// URL decoded before being decrypted. This should match the setting passed
+        /// to <see cref="EncryptData"/>.</param>
         public ArgumentEncryptor(string password, string encryptedData, bool urlDecode = true)
         {
             Password = password ?? throw new ArgumentNullException(nameof(password));
@@ -70,6 +70,7 @@ namespace SoftCircuits.QueryArgumentEncryptor
         /// <param name="urlDecode">If true, <paramref name="encryptedData"/> is
         /// URL decoded before being decrypted. In general, this must match
         /// the setting passed to <see cref="EncryptData"/>.</param>
+        /// <exception cref="InvalidDataException">The data or password was invalid.</exception>
         public void DecryptData(string encryptedData, bool urlDecode = true)
         {
             try
@@ -84,7 +85,32 @@ namespace SoftCircuits.QueryArgumentEncryptor
             {
                 // Clear all data on exception
                 Clear();
-                throw new Exception("Invalid data or password", ex);
+                throw new InvalidDataException("Invalid data or password", ex);
+            }
+        }
+
+        /// <summary>
+        /// Constructs name/value data from an encrypted string created with
+        /// <see cref="EncryptData(bool)"></see>. Replaces any data already in
+        /// this collection. Works the same as <see cref="DecryptData(string, bool)"/>
+        /// but does not throw an exception if the data cannot be decrypted.
+        /// </summary>
+        /// <param name="encryptedData">The encrypted string previously encrypted with
+        /// <see cref="EncryptData(bool)"></see>.</param>
+        /// <param name="urlDecode">If true, <paramref name="encryptedData"/> is
+        /// URL decoded before being decrypted. In general, this must match
+        /// the setting passed to <see cref="EncryptData"/>.</param>
+        /// <returns>True if the data was decrypted; false, otherwise.</returns>
+        public bool TryDecryptData(string encryptedData, bool urlDecode = true)
+        {
+            try
+            {
+                DecryptData(encryptedData, urlDecode);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 
@@ -149,12 +175,12 @@ namespace SoftCircuits.QueryArgumentEncryptor
                 throw new Exception("A password is required.");
 
             // Get data bytes
-            byte[] data = Convert.FromBase64String(encryptedData);
+            byte[] data = Convert.FromBase64String(encryptedData ?? throw new ArgumentNullException(nameof(encryptedData)));
 
             // Confirm checksum
             Int16 checksum = BitConverter.ToInt16(data, 0);
             if (checksum != CalculateChecksum(data, ChecksumLength, data.Length - ChecksumLength))
-                throw new Exception("Encrypted data has bad checksum.");
+                throw new InvalidDataException("Encrypted data is not valid.");
 
             using (TripleDES tripleDES = TripleDES.Create())
             {

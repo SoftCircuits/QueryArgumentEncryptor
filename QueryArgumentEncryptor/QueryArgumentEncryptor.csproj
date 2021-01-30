@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-    <Copyright>Copyright © 2019-2020 SoftCircuits</Copyright>
+    <Copyright>Copyright © 2019-2021 SoftCircuits</Copyright>
     <Authors>Jonathan Wood</Authors>
     <Company>SoftCircuits</Company>
     <Description>.NET library that can transform any number of name/value pairs into an encrypted string and then back again. Allows you to pass secret data via URL query arguments. Data includes checksum so that it can't be tampered with. Can be used anywhere you need a Dictionary&lt;string, string&gt; that can encrypt to a string and back again.</Description>
@@ -15,8 +15,8 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>encode query encrypt arguments url encrypt-query encrypt-query-arguments</PackageTags>
     <PackageId>SoftCircuits.QueryArgumentEncryptor</PackageId>
-    <Version>1.0.2</Version>
-    <PackageReleaseNotes>Completely reworked code; Expanded unit tests; Added package icon.</PackageReleaseNotes>
+    <Version>1.1.0</Version>
+    <PackageReleaseNotes>Added TryDecryptData() to decrypt data without throwing an exception; Minor tweaks and enhancements; Tweaks to unit tests.</PackageReleaseNotes>
     <PackageIcon>Logo_64x64.png</PackageIcon>
     <PackageIconUrl />
   </PropertyGroup>

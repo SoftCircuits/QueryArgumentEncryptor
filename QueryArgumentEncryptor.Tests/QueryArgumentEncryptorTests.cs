@@ -1,10 +1,10 @@
-﻿// Copyright (c) 2019-2020 Jonathan Wood (www.softcircuits.com)
+﻿// Copyright (c) 2019-2021 Jonathan Wood (www.softcircuits.com)
 // Licensed under the MIT license.
 //
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoftCircuits.QueryArgumentEncryptor;
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace TestQueryArgumentEncryptor
@@ -48,15 +48,18 @@ namespace TestQueryArgumentEncryptor
         {
             ("Name", "Bob Smith"),
             ("Phone", "555-0000"),
+            ("Address", "1422 Willow Lane"),
         };
 
         [TestMethod]
         public void TestSampleData()
         {
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            SampleData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+
+            foreach (var item in SampleData)
+                encryptor.Add(item.Item1, item.Item2);
             string cipher = encryptor.EncryptData(false);
-            encryptor.DecryptData(cipher, false);
+            Assert.AreEqual(true, encryptor.TryDecryptData(cipher, false));
             CollectionAssert.AreEqual(SampleData.ToDictionary(x => x.Item1, x => x.Item2), encryptor);
         }
 
@@ -64,7 +67,9 @@ namespace TestQueryArgumentEncryptor
         public void TestSmallData()
         {
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            SampleSmallData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+
+            foreach (var item in SampleSmallData)
+                encryptor.Add(item.Item1, item.Item2);
             string cipher = encryptor.EncryptData(false);
             encryptor.DecryptData(cipher, false);
             CollectionAssert.AreEqual(SampleSmallData.ToDictionary(x => x.Item1, x => x.Item2), encryptor);
@@ -73,12 +78,17 @@ namespace TestQueryArgumentEncryptor
         [TestMethod]
         public void TestLargeData()
         {
+            // Create larger test data
             List<(string, string)> bigData = new List<(string, string)>();
-            SampleData.ForEach((x) => bigData.Add((x.Item1, x.Item2)));
+            foreach (var item in SampleData)
+                bigData.Add((item.Item1, item.Item2));
             for (char c = 'A'; c <= 'F'; c++)
                 SampleData.ForEach((x) => bigData.Add((x.Item1 + c, x.Item2)));
+
+            // Run test
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            bigData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+            foreach (var item in bigData)
+                encryptor.Add(item.Item1, item.Item2);
             string cipher = encryptor.EncryptData(false);
             encryptor.DecryptData(cipher, false);
             CollectionAssert.AreEqual(bigData.ToDictionary(x => x.Item1, x => x.Item2), encryptor);
@@ -88,60 +98,67 @@ namespace TestQueryArgumentEncryptor
         public void TestSampleDataUrlEncoding()
         {
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            SampleData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+
+            foreach (var item in SampleData)
+                encryptor.Add(item.Item1, item.Item2);
             string cipher = encryptor.EncryptData(true);
             encryptor.DecryptData(cipher, true);
             CollectionAssert.AreEqual(SampleData.ToDictionary(x => x.Item1, x => x.Item2), encryptor);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [ExpectedException(typeof(InvalidDataException), AllowDerivedTypes = true)]
         public void TestBadPassword()
         {
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            SampleData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+            foreach (var item in SampleData)
+                encryptor.Add(item.Item1, item.Item2);
             string cipher = encryptor.EncryptData();
+
             ArgumentEncryptor encryptor2 = new ArgumentEncryptor("Password456");
+            Assert.AreEqual(false, encryptor2.TryDecryptData(cipher));
             encryptor2.DecryptData(cipher);
             Assert.Fail("No exception thrown on invalid password.");
-            //Assert.AreEqual(0, encryptor2.Count);
-            //CollectionAssert.AreNotEqual(SampleData.ToDictionary(x => x.Item1, x => x.Item2), encryptor2);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [ExpectedException(typeof(InvalidDataException), AllowDerivedTypes = true)]
         public void TestBadData()
         {
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            SampleData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+            foreach (var item in SampleData)
+                encryptor.Add(item.Item1, item.Item2);
+
             // Corrupt data
             string cipher = encryptor.EncryptData();
             Assert.AreNotEqual(0, cipher.Length);
             int mid = cipher.Length / 2;
             cipher = cipher.Substring(0, mid) + "x" + cipher.Substring(mid);
+
             ArgumentEncryptor encryptor2 = new ArgumentEncryptor("Password123");
+            Assert.AreEqual(false, encryptor2.TryDecryptData(cipher));
             encryptor2.DecryptData(cipher);
             Assert.Fail("No exception thrown on invalid data.");
-            //Assert.AreEqual(0, encryptor2.Count);
-            //CollectionAssert.AreNotEqual(SampleData.ToDictionary(x => x.Item1, x => x.Item2), encryptor2);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [ExpectedException(typeof(InvalidDataException), AllowDerivedTypes = true)]
         public void TestBadData2()
         {
             ArgumentEncryptor encryptor = new ArgumentEncryptor("Password123");
-            SampleData.ForEach((x) => encryptor.Add(x.Item1, x.Item2));
+            foreach (var item in SampleData)
+                encryptor.Add(item.Item1, item.Item2);
+
             // Corrupt data
             string cipher = encryptor.EncryptData();
             Assert.AreNotEqual(0, cipher.Length);
             int mid = cipher.Length / 2;
             cipher = cipher.Substring(0, mid - 1) + "x" + cipher.Substring(mid);
+
             ArgumentEncryptor encryptor2 = new ArgumentEncryptor("Password123");
+            Assert.AreEqual(false, encryptor2.TryDecryptData(cipher));
             encryptor2.DecryptData(cipher);
             Assert.Fail("No exception thrown on invalid data.");
-            //Assert.AreEqual(0, encryptor2.Count);
-            //CollectionAssert.AreNotEqual(SampleData.ToDictionary(x => x.Item1, x => x.Item2), encryptor2);
         }
     }
 }
