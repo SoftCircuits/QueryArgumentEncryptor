@@ -1,24 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
+    <Nullable>annotations</Nullable>
+    <Nullable Condition="'$(TargetFramework)' == 'net5.0'">enable</Nullable>
+    <LangVersion>9.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
     <Copyright>Copyright © 2019-2021 SoftCircuits</Copyright>
     <Authors>Jonathan Wood</Authors>
     <Company>SoftCircuits</Company>
-    <Description>.NET library that can transform any number of name/value pairs into an encrypted string and then back again. Allows you to pass secret data via URL query arguments. Data includes checksum so that it can't be tampered with. Can be used anywhere you need a Dictionary&lt;string, string&gt; that can encrypt to a string and back again.</Description>
+    <Description>.NET library that can transform any number of name/value pairs into an encrypted string and then back again. Allows you to pass secret data via URL query arguments. Data includes checksum so that it can't be tampered with. Can be used anywhere you need a Dictionary&lt;string, string&gt; that can encrypt to a string and back again.
+
+Now targets .NET Standard 2.0 or .NET 5.0, and supports nullable reference types.</Description>
     <PackageProjectUrl>https://github.com/SoftCircuits/QueryArgumentEncryptor</PackageProjectUrl>
     <RepositoryUrl>https://github.com/SoftCircuits/QueryArgumentEncryptor</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageTags>encode query encrypt arguments url encrypt-query encrypt-query-arguments</PackageTags>
     <PackageId>SoftCircuits.QueryArgumentEncryptor</PackageId>
-    <Version>1.1.0</Version>
-    <PackageReleaseNotes>Added TryDecryptData() to decrypt data without throwing an exception; Minor tweaks and enhancements; Tweaks to unit tests.</PackageReleaseNotes>
+    <Version>2.0.0</Version>
+    <PackageReleaseNotes>Now targets .NET Standard 2.0 or .NET 5.0, and supports nullable reference types.</PackageReleaseNotes>
     <PackageIcon>Logo_64x64.png</PackageIcon>
     <PackageIconUrl />
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
